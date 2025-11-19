@@ -1,0 +1,632 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Ospital ng Makati – Antimicrobial Request System (IDS Dashboard)</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <style>
+    :root {
+      --osmak-green: #009a3e;
+      --osmak-green-dark: #007530;
+      --osmak-red: #dc2626;
+      --amber: #f59e0b;
+      --bg-main: #f5f5f5;
+      --bg-card: #ffffff;
+      --text-main: #111827;
+      --text-muted: #6b7280;
+      --border: #d1d5db;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: var(--bg-main);
+      color: var(--text-main);
+    }
+
+    header {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      padding: 0.75rem 1rem;
+      background: var(--osmak-green);
+      color: #fff;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+    }
+    header img { height: 48px; }
+    header h1 {
+      margin: 0;
+      font-size: 1.05rem;
+      letter-spacing: 0.03em;
+      text-transform: uppercase;
+    }
+    header small { font-size: 0.8rem; }
+
+    .main {
+      max-width: 1300px;
+      margin: 0 auto;
+      padding: 1rem;
+    }
+
+    .filter-bar {
+      background: #fff;
+      padding: 1rem;
+      border-radius: 0.75rem;
+      border: 1px solid var(--border);
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.75rem;
+      margin-bottom: 1.2rem;
+    }
+    .filter-bar input,
+    .filter-bar select {
+      padding: 0.45rem;
+      font-size: 0.9rem;
+      border: 1px solid var(--border);
+      border-radius: 0.4rem;
+    }
+
+    details {
+      background: #fff;
+      border-radius: 0.75rem;
+      padding: 0.75rem 1rem;
+      border: 1px solid var(--border);
+      margin-bottom: 1rem;
+    }
+    summary {
+      font-size: 1rem;
+      font-weight: 600;
+      cursor: pointer;
+    }
+
+    .kpi-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+      gap: 1rem;
+      margin-top: 1rem;
+    }
+    .kpi-card {
+      background: #fff;
+      padding: 1rem;
+      border-radius: 0.75rem;
+      border: 1px solid var(--border);
+      text-align: center;
+    }
+    .kpi-value { font-size: 1.6rem; font-weight: 700; }
+    .kpi-label { color: var(--text-muted); font-size: 0.85rem; }
+
+    .block {
+      background: #fff;
+      border: 1px solid var(--border);
+      border-radius: 0.75rem;
+      padding: 1rem;
+      min-height: 180px;
+      margin-bottom: 1rem;
+    }
+    .block h3 {
+      margin: 0 0 0.6rem;
+      font-size: 1rem;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.85rem;
+    }
+    th, td {
+      padding: 0.5rem;
+      border-bottom: 1px solid var(--border);
+    }
+    th {
+      background: #f3f4f6;
+      font-weight: 600;
+    }
+  </style>
+</head>
+
+<body>
+
+<header>
+  <img src="https://maxterrenal-hash.github.io/justculture/osmak-logo.png">
+  <div>
+    <h1>OSPITAL NG MAKATI</h1>
+    <small>Antimicrobial Request System – IDS Dashboard</small>
+  </div>
+</header>
+
+<div class="main">
+
+  <!-- FILTERS -->
+  <div class="filter-bar">
+    <input type="date" id="dateStart">
+    <input type="date" id="dateEnd">
+
+    <select id="modeFilter">
+      <option value="">Mode: All</option>
+      <option value="Adult">Adult</option>
+      <option value="Pediatric">Pediatric</option>
+    </select>
+
+    <select id="drugTypeFilter">
+      <option value="">Drug Type: All</option>
+      <option value="Restricted">Restricted</option>
+      <option value="Monitored">Monitored</option>
+    </select>
+
+    <select id="wardFilter">
+      <option value="">Ward: All</option>
+      <option>ER</option>
+      <option>MICU</option>
+      <option>Wards</option>
+      <option>Pediatrics</option>
+      <option>OB-GYN</option>
+    </select>
+
+    <select id="deptFilter">
+      <option value="">Department: All</option>
+      <option>Internal Medicine</option>
+      <option>Surgery</option>
+      <option>Pediatrics</option>
+      <option>Otolaryngology</option>
+      <option>Ophthalmology</option>
+      <option>Family Medicine</option>
+      <option>Emergency Medicine</option>
+    </select>
+
+    <select id="idsFilter">
+      <option value="">IDS: All</option>
+      <option>Dr. Christopher John Tibayan</option>
+      <option>Dr. Paulo Garcia</option>
+      <option>Dr. Jelly Ann Gozun-Recuenco</option>
+      <option>Dr. Michelle Carandang-Cuvin</option>
+    </select>
+
+    <input type="text" id="searchBox" placeholder="Search…">
+  </div>
+
+  <!-- KPIs -->
+  <details open>
+    <summary>Key Performance Indicators</summary>
+    <div class="kpi-grid">
+      <div class="kpi-card"><div class="kpi-value" id="kpiTotal">0</div><div class="kpi-label">Total Requests</div></div>
+      <div class="kpi-card"><div class="kpi-value" id="kpiRestricted">0</div><div class="kpi-label">Restricted</div></div>
+      <div class="kpi-card"><div class="kpi-value" id="kpiMonitored">0</div><div class="kpi-label">Monitored</div></div>
+      <div class="kpi-card"><div class="kpi-value" id="kpiApprovalRate">0%</div><div class="kpi-label">IDS Approval Rate</div></div>
+      <div class="kpi-card"><div class="kpi-value" id="kpiAgeRatio">—</div><div class="kpi-label">Adult : Pediatric</div></div>
+      <div class="kpi-card"><div class="kpi-value" id="kpiTurnaround">0 hr</div><div class="kpi-label">Decision Time (Median)</div></div>
+    </div>
+  </details>
+
+  <!-- CHART BLOCKS -->
+  <details>
+    <summary>Diagnosis Analytics</summary>
+    <div class="block"><h3>Top Diagnoses</h3><canvas id="chartTopDx"></canvas></div>
+  </details>
+
+  <details>
+    <summary>Antibiotic Analytics</summary>
+    <div class="block"><h3>Top Antibiotics</h3><canvas id="chartTopAntibiotics"></canvas></div>
+    <div class="block"><h3>Restricted</h3><canvas id="chartRestricted"></canvas></div>
+    <div class="block"><h3>Monitored</h3><canvas id="chartMonitored"></canvas></div>
+  </details>
+
+  <details>
+    <summary>Indication Analytics</summary>
+    <div class="block"><h3>Indications</h3><canvas id="chartIndication"></canvas></div>
+  </details>
+
+  <details>
+    <summary>Ward & Department Analytics</summary>
+    <div class="block"><h3>Ward</h3><canvas id="chartWard"></canvas></div>
+    <div class="block"><h3>Department</h3><canvas id="chartDept"></canvas></div>
+  </details>
+
+  <details>
+    <summary>IDS Analytics</summary>
+    <div class="block"><h3>IDS Decisions</h3><canvas id="chartIDSPerf"></canvas></div>
+    <div class="block"><h3>IDS Load</h3><canvas id="chartIDSLoad"></canvas></div>
+  </details>
+
+  <details>
+    <summary>Time Trends</summary>
+    <div class="block"><h3>Daily Trend</h3><canvas id="chartDailyTrend"></canvas></div>
+    <div class="block"><h3>Monthly Trend</h3><canvas id="chartMonthlyTrend"></canvas></div>
+  </details>
+
+  <!-- RAW TABLE -->
+  <details open>
+    <summary>Raw Data</summary>
+    <div style="overflow-x:auto; margin-top:1rem;">
+      <table>
+        <thead>
+          <tr>
+            <th>Patient</th><th>Age</th><th>Diagnosis</th><th>Drug</th>
+            <th>Type</th><th>Ward</th><th>Resident</th><th>IDS</th>
+            <th>Status</th><th>Date</th>
+          </tr>
+        </thead>
+        <tbody id="rawTable"></tbody>
+      </table>
+    </div>
+  </details>
+
+</div>
+
+<script>
+// ============================================================
+// CONFIG
+// ============================================================
+const API = "https://script.google.com/macros/s/AKfycbyOn07fNbCJgebYhU1Unp3aFV41bMayX0SQwubc15KV6tQXORcQ-c_64Zvo_8aflGH3/exec";
+
+let ALL_DATA = [];
+let FILTERED = [];
+let CHARTS = {};
+
+
+// ============================================================
+// LOAD DATA
+// ============================================================
+async function loadData() {
+  try {
+    const res = await fetch(API);
+    const json = await res.json();
+    ALL_DATA = (json.entries || []).map(normalize);
+    applyFilters();
+  } catch (err) {
+    console.error("Fetch error:", err);
+  }
+}
+
+// Normalize mismatch field names
+function normalize(e) {
+  const d = e.data;
+
+  // Unify field names
+  d.reqdate = d.date || d.reqdate || d.timestamp?.substring(0,10);
+  d.mode = title(d.mode);
+  d.drugtype = title(d.drugtype);
+  d.clinicaldept = d.clinicaldepartment || d.clinicaldept;
+
+  d.idspecialist =
+    d.infectiousdiseasespecialist ||
+    d.idspecialist ||
+    "";
+
+  d.status = d.status || "";
+  d.antimicrobial = d.antimicrobial || d.drug || "";
+  d.residentname = d.residentname || d.serviceresidentname || "";
+
+  return { ...e, data: d };
+}
+
+function title(x) {
+  if (!x) return "";
+  return x.charAt(0).toUpperCase() + x.slice(1).toLowerCase();
+}
+
+
+// ============================================================
+// FILTER ENGINE
+// ============================================================
+function applyFilters() {
+  const start = dateVal("dateStart");
+  const end = dateVal("dateEnd");
+
+  const mode = val("modeFilter");
+  const drugType = val("drugTypeFilter");
+  const ward = val("wardFilter");
+  const dept = val("deptFilter");
+  const ids = val("idsFilter");
+  const search = val("searchBox").toLowerCase();
+
+  FILTERED = ALL_DATA.filter((e) => {
+    const d = e.data;
+
+    if (start && d.reqdate < start) return false;
+    if (end && d.reqdate > end) return false;
+
+    if (mode && d.mode !== mode) return false;
+    if (drugType && d.drugtype !== drugType) return false;
+    if (ward && d.ward !== ward) return false;
+    if (dept && d.clinicaldept !== dept) return false;
+    if (ids && d.idspecialist !== ids) return false;
+
+    if (search) {
+      const blob = (
+        (d.patientname || "") +
+        (d.diagnosis || "") +
+        (d.antimicrobial || "")
+      ).toLowerCase();
+      if (!blob.includes(search)) return false;
+    }
+
+    return true;
+  });
+
+  renderKPIs();
+  renderRawTable();
+  renderCharts();
+}
+
+function val(id) { return document.getElementById(id).value; }
+function dateVal(id) { return val(id); }
+
+
+// ============================================================
+// KPI ENGINE
+// ============================================================
+function renderKPIs() {
+  const total = FILTERED.length;
+  const restricted = FILTERED.filter(e => e.data.drugtype === "Restricted").length;
+  const monitored = FILTERED.filter(e => e.data.drugtype === "Monitored").length;
+
+  const approved = FILTERED.filter(e => e.data.status === "approved").length;
+
+  const adult = FILTERED.filter(e => e.data.mode === "Adult").length;
+  const pediatric = FILTERED.filter(e => e.data.mode === "Pediatric").length;
+
+  const ratio = `${adult} : ${pediatric}`;
+
+  document.getElementById("kpiTotal").textContent = total;
+  document.getElementById("kpiRestricted").textContent = restricted;
+  document.getElementById("kpiMonitored").textContent = monitored;
+  document.getElementById("kpiApprovalRate").textContent =
+    total ? ((approved / total) * 100).toFixed(1) + "%" : "0%";
+  document.getElementById("kpiAgeRatio").textContent = ratio;
+
+  document.getElementById("kpiTurnaround").textContent =
+    calcTAT(FILTERED) + " hr";
+}
+
+function calcTAT(list) {
+  const arr = [];
+
+  list.forEach(e => {
+    const d = e.data;
+    if (!d.reqdate) return;
+
+    let start = new Date(d.reqdate);
+    let end = d.idsapprovedat
+      ? new Date(d.idsapprovedat)
+      : d.idsdisapprovedat
+      ? new Date(d.idsdisapprovedat)
+      : null;
+
+    if (!end) return;
+
+    const h = (end - start) / 36e5;
+    if (h > 0 && h < 5000) arr.push(h);
+  });
+
+  if (!arr.length) return 0;
+  arr.sort((a,b) => a-b);
+  const m = Math.floor(arr.length / 2);
+  return arr.length % 2 ? arr[m].toFixed(1) : ((arr[m-1]+arr[m])/2).toFixed(1);
+}
+
+
+// ============================================================
+// RAW TABLE
+// ============================================================
+function renderRawTable() {
+  const tb = document.getElementById("rawTable");
+  tb.innerHTML = "";
+
+  FILTERED.forEach(e => {
+    const d = e.data;
+    const tr = document.createElement("tr");
+    tr.innerHTML = `
+      <td>${d.patientname || ""}</td>
+      <td>${d.age || ""}</td>
+      <td>${d.diagnosis || ""}</td>
+      <td>${d.antimicrobial || ""}</td>
+      <td>${d.drugtype || ""}</td>
+      <td>${d.ward || ""}</td>
+      <td>${d.residentname || ""}</td>
+      <td>${d.idspecialist || ""}</td>
+      <td>${d.status || ""}</td>
+      <td>${d.reqdate || ""}</td>
+    `;
+    tb.appendChild(tr);
+  });
+}
+
+
+// ============================================================
+// CHART HELPERS
+// ============================================================
+function resetChart(id) {
+  if (CHARTS[id]) {
+    CHARTS[id].destroy();
+    delete CHARTS[id];
+  }
+}
+
+function countMap(field) {
+  const m = {};
+  FILTERED.forEach(e => {
+    const v = e.data[field];
+    if (!v) return;
+    m[v] = (m[v] || 0) + 1;
+  });
+  return m;
+}
+
+
+// ============================================================
+// CHARTS
+// ============================================================
+function renderCharts() {
+  chartBar("chartTopDx", countMap("diagnosis"));
+  chartBar("chartTopAntibiotics", countMap("antimicrobial"));
+  chartBar("chartRestricted", Object.fromEntries(
+    Object.entries(countMap("antimicrobial")).filter(x =>
+      FILTERED.find(e => e.data.antimicrobial === x[0] && e.data.drugtype === "Restricted")
+    )
+  ));
+  chartBar("chartMonitored", Object.fromEntries(
+    Object.entries(countMap("antimicrobial")).filter(x =>
+      FILTERED.find(e => e.data.antimicrobial === x[0] && e.data.drugtype === "Monitored")
+    )
+  ));
+  chartBar("chartIndication", countMap("indication"));
+
+  chartPie("chartWard", countMap("ward"));
+  chartPie("chartDept", countMap("clinicaldept"));
+
+  chartIDSPerf();
+  chartBar("chartIDSLoad", countMap("idspecialist"));
+
+  chartDailyTrend();
+  chartMonthlyTrend();
+}
+
+function chartBar(id, map) {
+  const ctx = document.getElementById(id);
+  if (!ctx) return;
+
+  resetChart(id);
+  CHARTS[id] = new Chart(ctx, {
+    type: "bar",
+    data: { labels: Object.keys(map), datasets: [{ data: Object.values(map) }] },
+    options: { responsive: true }
+  });
+}
+
+function chartPie(id, map) {
+  const ctx = document.getElementById(id);
+  if (!ctx) return;
+
+  resetChart(id);
+  CHARTS[id] = new Chart(ctx, {
+    type: "pie",
+    data: { labels: Object.keys(map), datasets: [{ data: Object.values(map) }] }
+  });
+}
+
+// IDS perf chart
+function chartIDSPerf() {
+  const id = "chartIDSPerf";
+  const ctx = document.getElementById(id);
+  if (!ctx) return;
+
+  resetChart(id);
+
+  const map = {};
+
+  FILTERED.forEach(e => {
+    const d = e.data;
+    const name = d.idspecialist || "Unassigned";
+    map[name] = map[name] || { approved: 0, disapproved: 0 };
+
+    if (d.status === "approved") map[name].approved++;
+    if (d.status === "disapproved") map[name].disapproved++;
+  });
+
+  const labels = Object.keys(map);
+
+  CHARTS[id] = new Chart(ctx, {
+    type: "bar",
+    data: {
+      labels,
+      datasets: [
+        { label: "Approved", data: labels.map(l => map[l].approved) },
+        { label: "Disapproved", data: labels.map(l => map[l].disapproved) }
+      ]
+    }
+  });
+}
+
+// Daily trend
+function chartDailyTrend() {
+  const id = "chartDailyTrend";
+  const ctx = document.getElementById(id);
+  if (!ctx) return;
+
+  resetChart(id);
+
+  const daily = {};
+  FILTERED.forEach(e => {
+    const d = e.data.reqdate;
+    if (d) daily[d] = (daily[d] || 0) + 1;
+  });
+
+  const labels = Object.keys(daily).sort();
+
+  CHARTS[id] = new Chart(ctx,{
+    type:"line",
+    data:{
+      labels,
+      datasets:[
+        { label:"Requests", data: labels.map(l => daily[l]), tension:0.3 }
+      ]
+    }
+  });
+}
+
+// Monthly trend
+function chartMonthlyTrend() {
+  const id = "chartMonthlyTrend";
+  const ctx = document.getElementById(id);
+  if (!ctx) return;
+
+  resetChart(id);
+
+  const monthly = {};
+  FILTERED.forEach(e => {
+    const d = e.data.reqdate;
+    if (!d) return;
+    const dt = new Date(d);
+    const key = `${dt.getFullYear()}-${String(dt.getMonth()+1).padStart(2,"0")}`;
+    monthly[key] = (monthly[key] || 0) + 1;
+  });
+
+  const labels = Object.keys(monthly).sort();
+
+  CHARTS[id] = new Chart(ctx,{
+    type:"line",
+    data:{
+      labels,
+      datasets:[
+        { label:"Monthly Requests", data: labels.map(l => monthly[l]), tension:0.3 }
+      ]
+    }
+  });
+}
+
+
+// ============================================================
+// EVENT LISTENERS
+// ============================================================
+[
+  "dateStart",
+  "dateEnd",
+  "modeFilter",
+  "drugTypeFilter",
+  "wardFilter",
+  "deptFilter",
+  "idsFilter",
+  "searchBox",
+].forEach(id => {
+  const el = document.getElementById(id);
+  el.addEventListener("change", applyFilters);
+  el.addEventListener("input", applyFilters);
+});
+
+
+// INIT
+window.onload = loadData;
+
+</script>
+
+<!-- CHART JS CDN -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+</body>
+</html>
