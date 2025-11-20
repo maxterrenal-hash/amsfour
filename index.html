@@ -1,8 +1,290 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Ospital ng Makati – Antimicrobial Request System (IDS Dashboard)</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <style>
+    :root {
+      --osmak-green: #009a3e;
+      --osmak-green-dark: #007530;
+      --osmak-red: #dc2626;
+      --amber: #f59e0b;
+      --bg-main: #f5f5f5;
+      --bg-card: #ffffff;
+      --text-main: #111827;
+      --text-muted: #6b7280;
+      --border: #d1d5db;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: var(--bg-main);
+      color: var(--text-main);
+    }
+
+    header {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      padding: 0.75rem 1rem;
+      background: var(--osmak-green);
+      color: #fff;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+    }
+    header img { height: 48px; }
+    header h1 {
+      margin: 0;
+      font-size: 1.05rem;
+      letter-spacing: 0.03em;
+      text-transform: uppercase;
+    }
+    header small { font-size: 0.8rem; }
+
+    .main {
+      max-width: 1300px;
+      margin: 0 auto;
+      padding: 1rem;
+    }
+
+    .filter-bar {
+      background: #fff;
+      padding: 1rem;
+      border-radius: 0.75rem;
+      border: 1px solid var(--border);
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.75rem;
+      margin-bottom: 1.2rem;
+    }
+    .filter-bar input,
+    .filter-bar select {
+      padding: 0.45rem;
+      font-size: 0.9rem;
+      border: 1px solid var(--border);
+      border-radius: 0.4rem;
+    }
+
+    details {
+      background: #fff;
+      border-radius: 0.75rem;
+      padding: 0.75rem 1rem;
+      border: 1px solid var(--border);
+      margin-bottom: 1rem;
+    }
+    summary {
+      font-size: 1rem;
+      font-weight: 600;
+      cursor: pointer;
+    }
+
+    .kpi-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+      gap: 1rem;
+      margin-top: 1rem;
+    }
+    .kpi-card {
+      background: #fff;
+      padding: 1rem;
+      border-radius: 0.75rem;
+      border: 1px solid var(--border);
+      text-align: center;
+    }
+    .kpi-value { font-size: 1.6rem; font-weight: 700; }
+    .kpi-label { color: var(--text-muted); font-size: 0.85rem; }
+
+    .block {
+      background: #fff;
+      border: 1px solid var(--border);
+      border-radius: 0.75rem;
+      padding: 1rem;
+      min-height: 180px;
+      margin-bottom: 1rem;
+    }
+    .block h3 {
+      margin: 0 0 0.6rem;
+      font-size: 1rem;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.85rem;
+    }
+    th, td {
+      padding: 0.5rem;
+      border-bottom: 1px solid var(--border);
+    }
+    th {
+      background: #f3f4f6;
+      font-weight: 600;
+    }
+
+    /* Collapse all except KPIs */
+    details:not(:first-of-type) {
+      open: false;
+    }
+  </style>
+</head>
+
+   <body>
+
+<header>
+  <img src="https://maxterrenal-hash.github.io/justculture/osmak-logo.png">
+  <div>
+    <h1>OSPITAL NG MAKATI</h1>
+    <small>Antimicrobial Request System – IDS Dashboard</small>
+  </div>
+</header>
+
+<div class="main">
+
+  <!-- FILTERS -->
+  <div class="filter-bar">
+    <input type="date" id="dateStart">
+    <input type="date" id="dateEnd">
+
+    <select id="modeFilter">
+      <option value="">Mode: All</option>
+      <option value="Adult">Adult</option>
+      <option value="Pediatric">Pediatric</option>
+    </select>
+
+    <select id="drugTypeFilter">
+      <option value="">Drug Type: All</option>
+      <option value="Restricted">Restricted</option>
+      <option value="Monitored">Monitored</option>
+    </select>
+
+    <select id="wardFilter">
+      <option value="">Ward: All</option>
+      <option>ER</option>
+      <option>MICU</option>
+      <option>Wards</option>
+      <option>Pediatrics</option>
+      <option>OB-GYN</option>
+    </select>
+
+    <select id="deptFilter">
+      <option value="">Department: All</option>
+      <option>Internal Medicine</option>
+      <option>Surgery</option>
+      <option>Pediatrics</option>
+      <option>Otolaryngology</option>
+      <option>Ophthalmology</option>
+      <option>Family Medicine</option>
+      <option>Emergency Medicine</option>
+    </select>
+
+    <select id="idsFilter">
+      <option value="">IDS: All</option>
+      <option>Dr. Christopher John Tibayan</option>
+      <option>Dr. Paulo Garcia</option>
+      <option>Dr. Jelly Ann Gozun-Recuenco</option>
+      <option>Dr. Michelle Carandang-Cuvin</option>
+      <option>Dr. Pia Catrina Tolentino Torres</option>
+    </select>
+
+    <input type="text" id="searchBox" placeholder="Search…">
+  </div>
+
+  <!-- LIVE DASHBOARD + STANDARD KPIs -->
+  <details open>
+    <summary>Key Performance Indicators</summary>
+
+    <!-- LIVE DASHBOARD -->
+    <div class="kpi-grid">
+      <div class="kpi-card">
+        <div class="kpi-value" id="kpiPending">0</div>
+        <div class="kpi-label">Pending</div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-value" id="kpiForIDS">0</div>
+        <div class="kpi-label">For IDS Approval</div>
+      </div>
+    </div>
+
+    <!-- EXISTING KPIs -->
+    <div class="kpi-grid" style="margin-top:1.5rem;">
+      <div class="kpi-card"><div class="kpi-value" id="kpiTotal">0</div><div class="kpi-label">Total Requests</div></div>
+      <div class="kpi-card"><div class="kpi-value" id="kpiRestricted">0</div><div class="kpi-label">Restricted</div></div>
+      <div class="kpi-card"><div class="kpi-value" id="kpiMonitored">0</div><div class="kpi-label">Monitored</div></div>
+      <div class="kpi-card"><div class="kpi-value" id="kpiApprovalRate">0%</div><div class="kpi-label">IDS Approval Rate</div></div>
+      <div class="kpi-card"><div class="kpi-value" id="kpiAgeRatio">—</div><div class="kpi-label">Adult : Pediatric</div></div>
+      <div class="kpi-card"><div class="kpi-value" id="kpiTurnaround">0 hr</div><div class="kpi-label">Decision Time (Median)</div></div>
+
+      <!-- IDS-Specific TAT -->
+      <div class="kpi-card"><div class="kpi-value" id="kpiIDSTAT">0 hr</div><div class="kpi-label">IDS TAT (For IDS → Decision)</div></div>
+    </div>
+  </details>
+
+  <!-- ANALYTICS SECTIONS (all collapsed) -->
+  <details>
+    <summary>Diagnosis Analytics</summary>
+    <div class="block"><h3>Top Diagnoses</h3><canvas id="chartTopDx"></canvas></div>
+  </details>
+
+  <details>
+    <summary>Antibiotic Analytics</summary>
+    <div class="block"><h3>Top Antibiotics</h3><canvas id="chartTopAntibiotics"></canvas></div>
+    <div class="block"><h3>Restricted</h3><canvas id="chartRestricted"></canvas></div>
+    <div class="block"><h3>Monitored</h3><canvas id="chartMonitored"></canvas></div>
+  </details>
+
+  <details>
+    <summary>Indication Analytics</summary>
+    <div class="block"><h3>Indications</h3><canvas id="chartIndication"></canvas></div>
+  </details>
+
+  <details>
+    <summary>Ward & Department Analytics</summary>
+    <div class="block"><h3>Ward</h3><canvas id="chartWard"></canvas></div>
+    <div class="block"><h3>Department</h3><canvas id="chartDept"></canvas></div>
+  </details>
+
+  <details>
+    <summary>IDS Analytics</summary>
+    <div class="block"><h3>IDS Decisions</h3><canvas id="chartIDSPerf"></canvas></div>
+    <div class="block"><h3>IDS Load</h3><canvas id="chartIDSLoad"></canvas></div>
+  </details>
+
+  <details>
+    <summary>Time Trends</summary>
+    <div class="block"><h3>Daily Trend</h3><canvas id="chartDailyTrend"></canvas></div>
+    <div class="block"><h3>Monthly Trend</h3><canvas id="chartMonthlyTrend"></canvas></div>
+  </details>
+
+  <!-- RAW DATA FULL VIEW -->
+  <details>
+    <summary>Raw Data (Click to Show All)</summary>
+    <div style="overflow-x:auto; margin-top:1rem;">
+      <table>
+        <thead>
+          <tr>
+            <th>Patient</th><th>Age</th><th>Diagnosis</th><th>Drug</th>
+            <th>Type</th><th>Ward</th><th>Resident</th><th>IDS</th>
+            <th>Status</th><th>Date</th>
+          </tr>
+        </thead>
+        <tbody id="rawTable"></tbody>
+      </table>
+    </div>
+  </details>
+
+</div>
 <script>
 /* ============================================================
    CONFIG
 ============================================================ */
-const API = "https://script.google.com/macros/s/AKfycbwONf1cXzlTDOOHBcuo0j0us-bb074G_UBXytkGHNp3IpUChWwqUWSjq3TVV264fLac/exec";
+const API = "https://script.google.com/macros/s/AKfycbyOn07fNbCJgebYhU1Unp3aFV41bMayX0SQwubc15KV6tQXORcQ-c_64Zvo_8aflGH3/exec";
 
 let ALL_DATA = [];
 let FILTERED = [];
