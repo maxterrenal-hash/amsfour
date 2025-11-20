@@ -226,7 +226,9 @@
     </div>
   </details>
 
-  <!-- ANALYTICS SECTIONS (all collapsed) -->
+<div class="sections-grid">
+
+  <!-- LEFT COLUMN: CLINICAL ANALYTICS -->
   <details>
     <summary>Diagnosis Analytics</summary>
     <div class="block"><h3>Top Diagnoses</h3><canvas id="chartTopDx"></canvas></div>
@@ -244,6 +246,8 @@
     <div class="block"><h3>Indications</h3><canvas id="chartIndication"></canvas></div>
   </details>
 
+
+  <!-- RIGHT COLUMN: SYSTEM ANALYTICS -->
   <details>
     <summary>Ward & Department Analytics</summary>
     <div class="block"><h3>Ward</h3><canvas id="chartWard"></canvas></div>
@@ -262,8 +266,9 @@
     <div class="block"><h3>Monthly Trend</h3><canvas id="chartMonthlyTrend"></canvas></div>
   </details>
 
-  <!-- RAW DATA FULL VIEW -->
-  <details>
+
+  <!-- RAW DATA FULL WIDTH -->
+  <details class="full">
     <summary>Raw Data (Click to Show All)</summary>
     <div style="overflow-x:auto; margin-top:1rem;">
       <table>
@@ -280,6 +285,7 @@
   </details>
 
 </div>
+
 <script>
 /* ============================================================
    CONFIG
